@@ -1,7 +1,3 @@
-//go:build ignore
-// +build ignore
-
-// main.go
 package main
 
 import (
@@ -10,8 +6,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/eryk-vieira/next.go/cli/build"
-	"github.com/eryk-vieira/next.go/cli/types"
+	"github.com/eryk-vieira/next.go/cli/nextgo/build"
+	"github.com/eryk-vieira/next.go/cli/nextgo/types"
 )
 
 type Hello string
