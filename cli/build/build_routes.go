@@ -8,10 +8,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 
-	"github.com/google/uuid"
-
+	"github.com/eryk-vieira/next.go/cli/parsers"
 	"github.com/eryk-vieira/next.go/cli/types"
 )
 
@@ -31,10 +29,12 @@ type file struct {
 }
 
 type Route struct {
-	Method    string `json:"method"`
-	Pattern   string `json:"pattern"`
-	RouteType string `json:"route_type"`
-	FilePath  string `json:"file_path"`
+	Method      string `json:"method"`
+	Pattern     string `json:"pattern"`
+	RouteType   string `json:"route_type"`
+	FilePath    string `json:"file_path"`
+	Handler     string `json:"handler"`
+	PackageName string
 }
 
 type routerBuilder struct {
@@ -42,7 +42,9 @@ type routerBuilder struct {
 }
 
 func (builder *routerBuilder) Build() []Route {
-	routes, err := builder.scanDirectory(filepath.Join(builder.Settings.RootFolder, "pages"))
+	path := filepath.Join(builder.Settings.RootFolder, "src", "pages")
+
+	routes, err := builder.scanDirectory(path)
 
 	if err != nil {
 		panic(err)
@@ -80,7 +82,6 @@ func (*routerBuilder) scanDirectory(base_path string) ([]file, error) {
 func (builder *routerBuilder) registerRoutes(files []file) []Route {
 	os.RemoveAll(".dist")
 
-	osRootDir, _ := os.Getwd()
 	err := os.Mkdir(".dist", fs.ModePerm)
 
 	re := regexp.MustCompile(`_(\w+)`)
@@ -91,50 +92,40 @@ func (builder *routerBuilder) registerRoutes(files []file) []Route {
 
 	var routes []Route = []Route{}
 
-	var wg sync.WaitGroup
-
 	for _, file := range files {
-		if file.Name == "index.html" {
-			routes = append(routes, Route{
-				Method:    http.MethodGet,
-				Pattern:   re.ReplaceAllString(file.RelativePath, "{$1}"),
-				RouteType: "html",
-				FilePath:  filepath.Join(osRootDir, file.Path),
-			})
-		}
-
 		handlerName := builder.Settings.HTTP.HandlerName + ".go"
 
 		if file.Name == handlerName {
-			wg.Add(1)
-			pluginId := uuid.NewString()
-			pluginDestination := filepath.Join(osRootDir, ".dist", pluginId+".so")
+			parser := parsers.HandlerParser{}
 
-			pluginBuilder := pluginBuilder{
-				Dir:       builder.Settings.RootFolder,
-				DebugMode: true,
+			signature, err := parser.Parse(file.Path)
+
+			if err != nil {
+				panic(err)
 			}
 
-			go func() {
-				err := pluginBuilder.Build(filepath.Join("pages", file.RelativePath, file.Name), pluginDestination)
+			for _, f := range signature.Functions {
+				var knownMethod = false
 
-				if err != nil {
-					panic(err)
+				for i := 0; i < len(AllowedMethods); i++ {
+					if AllowedMethods[i] == f.FunctionName {
+						knownMethod = true
+						break
+					}
 				}
 
-				defer wg.Done()
-			}()
-
-			routes = append(routes, Route{
-				Method:    http.MethodGet,
-				Pattern:   re.ReplaceAllString(file.RelativePath, "{$1}"),
-				RouteType: "handler",
-				FilePath:  pluginDestination,
-			})
+				if knownMethod {
+					routes = append(routes, Route{
+						Method:      f.FunctionName,
+						Pattern:     re.ReplaceAllString(file.RelativePath, "{$1}"),
+						RouteType:   "handler",
+						FilePath:    filepath.Join(builder.Settings.Package, file.Path),
+						PackageName: signature.PackageName,
+					})
+				}
+			}
 		}
 	}
-
-	wg.Wait()
 
 	file, err := os.Create(filepath.Join(".dist", "routes.json"))
 

@@ -19,5 +19,12 @@ func (b *build) Build() []Route {
 		Settings: b.Settings,
 	}
 
-	return builder.Build()
+	routes := builder.Build()
+
+	serverBuilder := serverBuilder{
+		Settings: b.Settings,
+	}
+	serverBuilder.Build(routes)
+
+	return routes
 }
