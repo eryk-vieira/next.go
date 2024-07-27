@@ -3,29 +3,35 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net"
 	"os"
 	"os/exec"
+	"time"
 
-	"github.com/eryk-vieira/next.go/cli/nextgo/build"
+	build_tui "github.com/eryk-vieira/next.go/cli/nextgo/tui"
 	"github.com/eryk-vieira/next.go/cli/nextgo/types"
 )
-
-type Hello string
 
 func main() {
 	settings := parseSettings(os.Args[2:])
 	command := getCommand(os.Args[1:])
 
 	if command == "build" {
-		builder := build.NewBuilder(settings)
-		builder.Build()
-
-		fmt.Println("Build successfully!")
+		build_tui.Run(settings)
 
 		return
 	}
 
 	if command == "run" {
+		isOpen := raw_connect("localhost", settings.Server.Port)
+
+		if isOpen {
+			log.Fatalf("Port %s already in use", settings.Server.Port)
+
+			return
+		}
+
 		fmt.Println(fmt.Sprintf("Runnning server on port: %s", settings.Server.Port))
 
 		cmd := exec.Command("./server")
@@ -40,7 +46,7 @@ func main() {
 func parseSettings(args []string) *types.Settings {
 	var settings types.Settings
 
-	var configFile string = "nextgo.config.json"
+	var configFile string = "nextgo.json"
 
 	if len(args) > 0 {
 		configFile = args[0]
@@ -63,4 +69,19 @@ func parseSettings(args []string) *types.Settings {
 
 func getCommand(args []string) string {
 	return args[0]
+}
+
+func raw_connect(host string, port string) bool {
+	timeout := time.Second
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), timeout)
+
+	if err != nil {
+		return false
+	}
+
+	if conn != nil {
+		return true
+	}
+
+	return false
 }

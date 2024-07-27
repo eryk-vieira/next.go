@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -36,10 +37,19 @@ type RouteData struct {
 }
 
 type serverBuilder struct {
-	Settings *types.Settings
+	Settings  *types.Settings
+	debugMode bool
 }
 
 func (b *serverBuilder) Build(routes []Route) {
+	isDebug, err := strconv.ParseBool(os.Getenv("NEXTGO_DEBUG_MODE"))
+
+	if err != nil {
+		b.debugMode = false
+	} else if isDebug {
+		b.debugMode = true
+	}
+
 	os.Mkdir(os.TempDir()+"/nextgo", fs.ModePerm)
 
 	tempPath := filepath.Join(os.TempDir(), "nextgo/")
@@ -84,8 +94,11 @@ func (b *serverBuilder) Build(routes []Route) {
 
 	cmd := exec.Command("gofmt", "-w", "main.go")
 	cmd.Dir = tempPath
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+
+	if b.debugMode {
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+	}
 
 	err = cmd.Run()
 
@@ -95,8 +108,11 @@ func (b *serverBuilder) Build(routes []Route) {
 
 	cmd = exec.Command("go", "mod", "tidy")
 	cmd.Dir = tempPath
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+
+	if b.debugMode {
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+	}
 
 	err = cmd.Run()
 
@@ -106,8 +122,11 @@ func (b *serverBuilder) Build(routes []Route) {
 
 	cmd = exec.Command("go", "build", "-o", filepath.Join(workDir, ".dist")+"/server", tempPath)
 	cmd.Dir = tempPath
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+
+	if b.debugMode {
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+	}
 
 	err = cmd.Run()
 
