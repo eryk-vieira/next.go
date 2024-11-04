@@ -1,8 +1,6 @@
 package build
 
-import (
-	"github.com/eryk-vieira/next.go/cli/nextgo/types"
-)
+import "github.com/eryk-vieira/next.go/internal/cli/types"
 
 type build struct {
 	Settings *types.Settings

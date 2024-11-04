@@ -11,8 +11,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/eryk-vieira/next.go/cli/nextgo/build/templates"
-	"github.com/eryk-vieira/next.go/cli/nextgo/types"
+	"github.com/eryk-vieira/next.go/internal/cli/build/templates"
+	"github.com/eryk-vieira/next.go/internal/cli/types"
 )
 
 // TemplateData holds data to fill the ServerTemplate

@@ -10,8 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/eryk-vieira/next.go/cli/nextgo/build"
-	"github.com/eryk-vieira/next.go/cli/nextgo/types"
+	"github.com/eryk-vieira/next.go/internal/cli/build"
+	"github.com/eryk-vieira/next.go/internal/cli/types"
 )
 
 var p *tea.Program

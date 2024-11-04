@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eryk-vieira/next.go/cli/nextgo/parsers"
-	"github.com/eryk-vieira/next.go/cli/nextgo/types"
+	"github.com/eryk-vieira/next.go/internal/cli/parsers"
+	"github.com/eryk-vieira/next.go/internal/cli/types"
 )
 
 var AllowedMethods = [...]string{

@@ -9,8 +9,8 @@ import (
 	"os/exec"
 	"time"
 
-	build_tui "github.com/eryk-vieira/next.go/cli/nextgo/tui"
-	"github.com/eryk-vieira/next.go/cli/nextgo/types"
+	build_tui "github.com/eryk-vieira/next.go/internal/cli/tui"
+	"github.com/eryk-vieira/next.go/internal/cli/types"
 )
 
 func main() {
